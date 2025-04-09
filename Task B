@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Prototypes
+int* getNumbersFromUser(int *);
+void bubbleSort(int *, int);
+void printArray(const int *, int);
+void handleInvalidInput();
+void handleMemoryError();
+void handleNonNumberInput();
+
+int main() {
+    int *numbers = NULL;
+    int n = 0;
+
+    // Input
+    numbers = getNumbersFromUser(&n);
+
+    // Check if we got valid numbers
+    if (numbers == NULL || n <= 0) {
+        handleInvalidInput();
+        return 1; 
+    }
+
+    // Process
+    bubbleSort(numbers, n);
+
+    // Output
+    printArray(numbers, n);
+
+    // Clean 
+    free(numbers);
+
+    return 0;
+}
+
+// Function to tell the user if they didn't enter a positive number of elements
+void handleInvalidInput() {
+    printf("Please enter a positive number of elements (like 1, 2, 3, and so on).\n");
+}
+
+// Function to tell the user if the computer ran out of memory
+void handleMemoryError() {
+    printf("The computer had a little trouble remembering the numbers. Please try running the program again later!\n");
+}
+
+// Function to tell the user if they entered something that wasn't a number
+void handleNonNumberInput() {
+    printf("That wasn't a number. Please type in whole numbers like 10, -5, or 0.\n");
+    // Clear the input so the program doesn't get stuck
+    while (getchar() != '\n');
+}
+
+// Function to ask the user for numbers and store them in a dynamically allocated array
+int* getNumbersFromUser(int *size) {
+    int *array = NULL;
+    int numElements;
+
+    printf("How many numbers do you want to sort? ");
+    if (scanf("%d", &numElements) != 1 || numElements <= 0) {
+        handleNonNumberInput();
+        *size = 0;
+        return NULL;
+    }
+
+    array = (int*)malloc(numElements * sizeof(int));
+    if (array == NULL) {
+        handleMemoryError();
+        *size = 0;
+        return NULL;
+    }
+
+    printf("Enter %d numbers to sort:\n", numElements);
+    for (int i = 0; i < numElements; i++) {
+        printf("Number %d: ", i + 1);
+        // Keep asking until a valid number is entered
+        while (scanf("%d", &array[i]) != 1) {
+            handleNonNumberInput();
+            printf("Number %d: ", i + 1); // Ask again for the same number
+        }
+        while (getchar() != '\n');
+    }
+
+    *size = numElements;
+    return array;
+}
+
+// Function takes a list of numbers and puts them in order (smallest to largest)
+void bubbleSort(int *array, int size) {
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - 1 - i; j++) {
+            if (array[j] > array[j + 1]) {
+                int temp = array[j];
+                array[j] = array[j + 1];
+                array[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Function takes a list of numbers and shows them on the screen
+void printArray(const int *array, int size) {
+    printf("Sorted list of numbers: ");
+    for (int i = 0; i < size; i++) {
+        printf("%d ", array[i]);
+    }
+    printf("\n");
+}
