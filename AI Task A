@@ -1,0 +1,127 @@
+//Analysis: AI has put main function in the end and functions before the main function. 
+// It uses printf and scanf in main function. Library has specific variables, not variable types.
+// Has many comments
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+// Reads real numbers from a file into a dynamically allocated array
+float* read_float_array_from_file(int *element_count, const char *file_name) {
+    FILE *f_ptr = fopen(file_name, "r");
+    if (f_ptr == NULL) {
+        printf("Problem opening file: %s for reading.\n", file_name);
+        *element_count = 0;
+        return NULL;
+    }
+
+    int capacity = 10; // Start with space for 10 numbers
+    float *data_array = (float*)malloc(capacity * sizeof(float));
+    if (data_array == NULL) {
+        printf("Couldn't get memory for the array!\n");
+        fclose(f_ptr);
+        *element_count = 0;
+        return NULL;
+    }
+
+    int counter = 0;
+    float current_number;
+    while (fscanf(f_ptr, "%f", &current_number) == 1) {
+        if (counter >= capacity) {
+            capacity *= 2; // Double the space if we need more
+            float *temp_array = (float*)realloc(data_array, capacity * sizeof(float));
+            if (temp_array == NULL) {
+                printf("Couldn't get more memory for the array!\n");
+                fclose(f_ptr);
+                free(data_array);
+                *element_count = 0;
+                return NULL;
+            }
+            data_array = temp_array;
+        }
+        data_array[counter++] = current_number;
+    }
+    fclose(f_ptr);
+    *element_count = counter;
+    return data_array;
+}
+
+// Gets a real number from the person using the program
+float get_user_number() {
+    float user_input;
+    printf("Give me a real number: ");
+    scanf("%f", &user_input);
+    return user_input;
+}
+
+// Does the magic calculation for the K array
+void calculate_result_array(const float *array_one, int size_one, const float *array_two, int size_two, float *result_array, float magic_number) {
+    int smaller_size = (size_one < size_two) ? size_one : size_two;
+    if (smaller_size > 0) {
+        result_array[0] = 1.0;
+        for (int i = 1; i < smaller_size; i++) {
+            result_array[i] = result_array[i - 1] * array_one[i] * (magic_number * magic_number) / (array_one[i] * array_one[i] + array_two[i] * array_two[i]);
+        }
+    }
+}
+
+// Writes an array of real numbers to a file
+void save_float_array_to_file(const float *output_array, int array_size, const char *output_file) {
+    FILE *f_ptr = fopen(output_file, "w");
+    if (f_ptr == NULL) {
+        printf("Can't open file: %s for writing.\n", output_file);
+        return;
+    }
+    for (int i = 0; i < array_size; i++) {
+        fprintf(f_ptr, "%f\n", output_array[i]);
+    }
+    fclose(f_ptr);
+    printf("The result array has been saved in %s\n", output_file);
+}
+
+int main() {
+    // Let's get some input going
+    float *first_array = NULL;
+    float *second_array = NULL;
+    float *k_array = NULL;
+    int n_elements_a = 0;
+    int n_elements_b = 0;
+    int k_size_final = 0;
+    float special_x;
+
+    printf("Reading numbers from F1.txt...\n");
+    first_array = read_float_array_from_file(&n_elements_a, "F1.txt");
+    printf("Read %d numbers from F1.txt\n", n_elements_a);
+
+    printf("Reading numbers from F2.txt...\n");
+    second_array = read_float_array_from_file(&n_elements_b, "F2.txt");
+    printf("Read %d numbers from F2.txt\n", n_elements_b);
+
+    printf("Please enter a real number for X: ");
+    scanf("%f", &special_x);
+    printf("You entered: %f\n", special_x);
+
+    // Time to do the calculation
+    k_size_final = (n_elements_a < n_elements_b) ? n_elements_a : n_elements_b;
+    k_array = (float*)malloc(k_size_final * sizeof(float)); // Get memory for the result array
+    if (k_array == NULL) {
+        printf("Couldn't get memory for the result array!\n");
+        free(first_array);
+        free(second_array);
+        return 1; // Indicate an error
+    }
+    calculate_result_array(first_array, n_elements_a, second_array, n_elements_b, k_array, special_x);
+    printf("Calculated %d numbers for the result array.\n", k_size_final);
+
+    // And finally, save the result
+    printf("Saving the result array to F3.txt...\n");
+    save_float_array_to_file(k_array, k_size_final, "F3.txt");
+
+    // It's good practice to free the memory we used when we're done with it!
+    free(first_array);
+    free(second_array);
+    free(k_array);
+
+    printf("All done!\n");
+    return 0;
+}
