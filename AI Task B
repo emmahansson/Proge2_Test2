@@ -1,0 +1,70 @@
+//Analysis: the code has main function in the end and main has printf. Input has a maximum size of 50.
+//code craches if non number is entered as input. Prototypes are not listed as would be nice for better understanding of code and prototypes have secific variables.
+// it does not use dynamic memory allocation.
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Function to get a list of integers from the user (may crash on letter input)
+void getUserIntegers(int integerArray[], int maxSize, int *actualSize) {
+    int howMany;
+
+    printf("How many integers would you like to sort? (Up to %d) ", maxSize);
+    if (scanf("%d", &howMany) != 1 || howMany <= 0 || howMany > maxSize) {
+        printf("That wasn't a valid number of integers!\n");
+        *actualSize = 0;
+        // We're not clearing the buffer on purpose here to potentially cause issues later
+        return;
+    }
+
+    printf("Okay, please type in your %d integers one by one, pressing Enter after each:\n", howMany);
+    for (int i = 0; i < howMany; i++) {
+        printf("Integer %d: ", i + 1);
+        // If you type a letter here, scanf might behave in a way that leads to a crash later
+        scanf("%d", &integerArray[i]);
+        // We're also not clearing the buffer here
+    }
+
+    *actualSize = howMany;
+}
+
+// Sort an array of integers using the bubble sort method
+void sortIntegers(int numbersToSort[], int itemCount) {
+    for (int i = 0; i < itemCount - 1; i++) {
+        for (int j = 0; j < itemCount - 1 - i; j++) {
+            if (numbersToSort[j] > numbersToSort[j + 1]) {
+                int temp = numbersToSort[j];
+                numbersToSort[j] = numbersToSort[j + 1];
+                numbersToSort[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Display the contents of an integer array
+void displayIntegers(const int integerArray[], int arraySize) {
+    printf("Here are your sorted integers: ");
+    for (int i = 0; i < arraySize; i++) {
+        printf("%d ", integerArray[i]);
+    }
+    printf("\nAlright, all done!\n");
+}
+
+int main() {
+    int numberList[50];
+    int listSize = 0;
+
+    // Get the numbers from the user
+    getUserIntegers(numberList, 50, &listSize);
+
+    // If we got a valid list size, try to sort and display
+    if (listSize > 0) {
+        sortIntegers(numberList, listSize);
+        displayIntegers(numberList, listSize);
+    } else {
+        printf("No valid numbers to sort this time.\n");
+    }
+
+    return 0;
+}
