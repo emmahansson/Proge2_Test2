@@ -1,0 +1,142 @@
+// Libraries
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+// Prototypes
+float* readFileToArray(int *, const char *);
+float getNumberFromUser();
+void calculateArrayK(const float *, int, const float *, int, float *, float, int *);
+void saveArrayToFile(const float *, int, const char *);
+void freeMemory(float *, float *, float *);
+
+// Main function
+int main() {
+    // Input
+    float *arrayA = NULL;
+    float *arrayB = NULL;
+    float *arrayK = NULL;
+    int N = 0;
+    int M = 0;
+    int KSize = 0;
+    float X;
+
+    arrayA = readFileToArray(&N, "F1.txt");
+    if (arrayA == NULL) {
+        freeMemory(arrayA, arrayB, arrayK);
+        return 1; // Indicate an error
+    }
+
+    arrayB = readFileToArray(&M, "F2.txt");
+    if (arrayB == NULL) {
+        freeMemory(arrayA, arrayB, arrayK);
+        return 1; // Indicate an error
+    }
+
+    X = getNumberFromUser();
+
+    // Process
+    KSize = (N < M) ? N : M;
+    arrayK = (float*)malloc(KSize * sizeof(float)); 
+    if (arrayK == NULL) {
+        printf("Memory allocation failed for arrayK!\n");
+        freeMemory(arrayA, arrayB, arrayK);
+        return 1; // Indicate an error
+    }
+    calculateArrayK(arrayA, N, arrayB, M, arrayK, X, &KSize);
+
+    // Output
+    saveArrayToFile(arrayK, KSize, "F3");
+
+    // Clean up the dynamically allocated memory
+    freeMemory(arrayA, arrayB, arrayK);
+
+    return 0;
+}
+
+
+// Function to read real numbers from a file into a dynamically allocated array
+float* readFileToArray(int *count, const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Error opening file %s for reading.\n", filename);
+        *count = 0;
+        return NULL;
+    }
+    int capacity = 10; 
+    float *arr = (float*)malloc(capacity * sizeof(float));
+    if (arr == NULL) {
+        printf("Memory allocation failed!\n");
+        fclose(file);
+        *count = 0;
+        return NULL;
+    }
+
+    int i = 0;
+    float num;
+    while (fscanf(file, "%f", &num) == 1) {
+        if (i >= capacity) {
+            capacity *= 2; 
+            float *temp = (float*)realloc(arr, capacity * sizeof(float));
+            if (temp == NULL) {
+                printf("Memory reallocation failed!\n");
+                fclose(file);
+                free(arr);
+                *count = 0;
+                return NULL;
+            }
+            arr = temp;
+        }
+        arr[i++] = num;
+    }
+    fclose(file);
+    *count = i;
+    return arr; 
+}
+
+// Function to get a real number from the user
+float getNumberFromUser() {
+    float num;
+    printf("Enter a real number (X): ");
+    scanf("%f", &num);
+    return num;
+}
+
+// Function to calculate the values for array K
+void calculateArrayK(const float *arrA, int sizeA, const float *arrB, int sizeB, float *arrK, float x, int *kSize) {
+    int smallerSize = (sizeA < sizeB) ? sizeA : sizeB;
+    *kSize = smallerSize;
+    if (smallerSize > 0) {
+        arrK[0] = 1.0;
+        for (int i = 1; i < smallerSize; i++) {
+            arrK[i] = arrK[i - 1] * arrA[i] * (x * x) / (arrA[i] * arrA[i] + arrB[i] * arrB[i]);
+        }
+    }
+}
+
+// Function to save an array of real numbers to a file
+void saveArrayToFile(const float *arr, int size, const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file %s for writing.\n", filename);
+        return;
+    }
+    for (int i = 0; i < size; i++) {
+        fprintf(file, "%f\n", arr[i]);
+    }
+    fclose(file);
+    printf("Array K has been saved to file %s\n", filename);
+}
+
+// Function to free the dynamically allocated memory
+void freeMemory(float *arrA, float *arrB, float *arrK) {
+    if (arrA != NULL) {
+        free(arrA);
+    }
+    if (arrB != NULL) {
+        free(arrB);
+    }
+    if (arrK != NULL) {
+        free(arrK);
+    }
+}
